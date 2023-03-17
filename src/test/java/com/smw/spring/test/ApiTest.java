@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test;
 class ApiTest {
 
   @Test
-  public void test_BeanFactory() {
+  void test_BeanFactory() {
     DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
     BeanDefinition beanDefinition = new BeanDefinition(UserService.class);
     beanFactory.registerBeanDefinition("userService", beanDefinition);
-    UserService userService = (UserService) beanFactory.getBean("userService");
+    UserService userService = (UserService) beanFactory.getBean("userService", "smw", 26);
     userService.queryUserInfo();
     UserService userService2 = (UserService) beanFactory.getBean("userService");
     userService2.queryUserInfo(); // 第二次从内存中获取
