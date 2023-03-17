@@ -2,9 +2,11 @@ package com.smw.spring.test.bean;
 
 public class UserService {
 
-  private String name;
+  private String uId;
 
   private Integer age;
+
+  private UserDao userDao;
 
   public UserService() {
   }
@@ -13,17 +15,17 @@ public class UserService {
     this.age = age;
   }
 
-  public UserService(String name) {
-    this.name = name;
+  public UserService(String uId) {
+    this.uId = uId;
   }
 
-  public UserService(String name, Integer age) {
-    this.name = name;
+  public UserService(String uId, Integer age) {
+    this.uId = uId;
     this.age = age;
   }
 
   public void queryUserInfo() {
-    System.out.println("姓名" + name + "年龄" + age);
+    System.out.println("查询用户信息： " + userDao.queryUserName(uId));
   }
 
 }

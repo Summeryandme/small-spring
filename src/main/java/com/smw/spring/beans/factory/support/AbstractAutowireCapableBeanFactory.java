@@ -1,6 +1,11 @@
 package com.smw.spring.beans.factory.support;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.smw.spring.beans.BeansException;
+import com.smw.spring.beans.PropertyValue;
+import com.smw.spring.beans.PropertyValues;
 import com.smw.spring.beans.factory.config.BeanDefinition;
+import com.smw.spring.beans.factory.config.BeanReference;
 import java.lang.reflect.Constructor;
 
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory {
@@ -10,6 +15,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
   @Override
   protected Object createBean(String beanName, BeanDefinition beanDefinition, Object... args) {
     Object bean = createBeanInstance(beanDefinition, beanName, args);
+    applyPropertyInstance(beanName, bean, beanDefinition);
     addSingleton(beanName, bean);
     return bean;
   }
@@ -26,6 +32,24 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
       }
     }
     return getInstantiationStrategy().instantiate(beanDefinition, beanName, constructor, args);
+  }
+
+  private void applyPropertyInstance(String beanName, Object bean, BeanDefinition beanDefinition) {
+    try {
+      PropertyValues propertyValues = beanDefinition.getPropertyValues();
+      for (PropertyValue propertyValue : propertyValues.getPropertyValues()) {
+        String name = propertyValue.getName();
+        Object value = propertyValue.getValue();
+        if (value instanceof BeanReference) {
+          BeanReference beanReference = (BeanReference) value;
+          value = getBean(beanReference.getBeanName());
+        }
+        BeanUtil.setFieldValue(bean, name, value);
+      }
+    } catch (Exception e) {
+      throw new BeansException("Error setting property value: " + beanName, e);
+    }
+
   }
 
   private boolean checkParameterType(Class<?>[] parameterTypes, Object[] args) {
