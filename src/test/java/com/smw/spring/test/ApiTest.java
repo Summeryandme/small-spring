@@ -1,16 +1,55 @@
 package com.smw.spring.test;
 
 
+import cn.hutool.core.io.IoUtil;
 import com.smw.spring.beans.PropertyValue;
 import com.smw.spring.beans.PropertyValues;
 import com.smw.spring.beans.factory.config.BeanDefinition;
 import com.smw.spring.beans.factory.config.BeanReference;
 import com.smw.spring.beans.factory.support.DefaultListableBeanFactory;
+import com.smw.spring.beans.factory.support.XmlBeanDefinitionReader;
+import com.smw.spring.core.io.DefaultResourceLoader;
+import com.smw.spring.core.io.Resource;
 import com.smw.spring.test.bean.UserDao;
 import com.smw.spring.test.bean.UserService;
+import java.io.IOException;
+import java.io.InputStream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ApiTest {
+
+  private DefaultResourceLoader resourceLoader;
+
+  @BeforeEach
+  public void init() {
+    resourceLoader = new DefaultResourceLoader();
+  }
+
+  @Test
+  void test_classpath() throws IOException {
+    Resource resource = resourceLoader.getResource("classpath:important.properties");
+    InputStream inputStream = resource.getInputStream();
+    String content = IoUtil.readUtf8(inputStream);
+    System.out.println(content);
+  }
+
+  @Test
+  void test_file() throws IOException {
+    Resource resource = resourceLoader.getResource("src/test/resources/important.properties");
+    InputStream inputStream = resource.getInputStream();
+    String content = IoUtil.readUtf8(inputStream);
+    System.out.println(content);
+  }
+
+  @Test
+  void test_url() throws IOException {
+    Resource resource = resourceLoader.getResource(
+        "https://www.google.com/");
+    InputStream inputStream = resource.getInputStream();
+    String content = IoUtil.readUtf8(inputStream);
+    System.out.println(content);
+  }
 
   @Test
   void test_BeanFactory() {
@@ -34,5 +73,16 @@ class ApiTest {
     beanFactory.registerBeanDefinition("userService", beanDefinition);
     UserService userService = (UserService) beanFactory.getBean("userService");
     userService.queryUserInfo();
+  }
+
+  @Test
+  void test_xml() {
+    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+    XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(beanFactory);
+    xmlBeanDefinitionReader.loadResourceDefinition("classpath:spring.xml");
+    UserService userService = beanFactory.getBean("userService", UserService.class);
+    userService.queryUserInfo();
+
+
   }
 }
