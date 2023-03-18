@@ -4,11 +4,14 @@ import cn.hutool.core.bean.BeanUtil;
 import com.smw.spring.beans.BeansException;
 import com.smw.spring.beans.PropertyValue;
 import com.smw.spring.beans.PropertyValues;
+import com.smw.spring.beans.factory.config.AutowireCapableBeanFactory;
 import com.smw.spring.beans.factory.config.BeanDefinition;
+import com.smw.spring.beans.factory.config.BeanPostProcessor;
 import com.smw.spring.beans.factory.config.BeanReference;
 import java.lang.reflect.Constructor;
 
-public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory {
+public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements
+    AutowireCapableBeanFactory {
 
   private InstantiationStrategy instantiationStrategy = new CglibSubClassingInstantiationStrategy();
 
@@ -16,8 +19,21 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
   protected Object createBean(String beanName, BeanDefinition beanDefinition, Object... args) {
     Object bean = createBeanInstance(beanDefinition, beanName, args);
     applyPropertyInstance(beanName, bean, beanDefinition);
+    bean = initializeBean(beanName, bean, beanDefinition);
     addSingleton(beanName, bean);
     return bean;
+  }
+
+  private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
+    Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean, beanName);
+    invokeInitMethods(beanName, wrappedBean, beanDefinition);
+    wrappedBean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+    return wrappedBean;
+  }
+
+  private void invokeInitMethods(String beanName, Object wrappedBean,
+      BeanDefinition beanDefinition) {
+
   }
 
   private Object createBeanInstance(BeanDefinition beanDefinition, String beanName,
@@ -72,6 +88,32 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
   public void setInstantiationStrategy(InstantiationStrategy instantiationStrategy) {
     this.instantiationStrategy = instantiationStrategy;
+  }
+
+  @Override
+  public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) {
+    Object result = existingBean;
+    for (BeanPostProcessor processor : getBeanPostProcessors()) {
+      Object current = processor.postProcessBeforeInitialization(result, beanName);
+      if (null == current) {
+        return result;
+      }
+      result = current;
+    }
+    return result;
+  }
+
+  @Override
+  public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName) {
+    Object result = existingBean;
+    for (BeanPostProcessor processor : getBeanPostProcessors()) {
+      Object current = processor.postProcessAfterInitialization(result, beanName);
+      if (null == current) {
+        return result;
+      }
+      result = current;
+    }
+    return result;
   }
 
 

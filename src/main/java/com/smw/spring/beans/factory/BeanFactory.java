@@ -1,4 +1,4 @@
-package com.smw.spring;
+package com.smw.spring.beans.factory;
 
 public interface BeanFactory {
 

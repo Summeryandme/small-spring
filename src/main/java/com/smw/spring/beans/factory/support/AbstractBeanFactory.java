@@ -1,10 +1,15 @@
 package com.smw.spring.beans.factory.support;
 
-import com.smw.spring.BeanFactory;
 import com.smw.spring.beans.factory.config.BeanDefinition;
+import com.smw.spring.beans.factory.config.BeanPostProcessor;
+import com.smw.spring.beans.factory.config.ConfigurableBeanFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements
-    BeanFactory {
+    ConfigurableBeanFactory {
+
+  private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
   @Override
   public Object getBean(String beanName) {
@@ -34,4 +39,14 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
       Object... args);
 
   protected abstract BeanDefinition getBeanDefinition(String beanName);
+
+  @Override
+  public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
+    this.beanPostProcessors.remove(beanPostProcessor);
+    this.beanPostProcessors.add(beanPostProcessor);
+  }
+
+  public List<BeanPostProcessor> getBeanPostProcessors() {
+    return this.beanPostProcessors;
+  }
 }

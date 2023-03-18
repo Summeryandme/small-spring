@@ -47,6 +47,12 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
     loadResourceDefinition(getResourceLoader().getResource(location));
   }
 
+  @Override
+  public void loadResourceDefinition(String... locations) {
+    Arrays.stream(locations).forEach(this::loadResourceDefinition);
+
+  }
+
   private void doLoadBeanDefinition(InputStream inputStream) throws ClassNotFoundException {
     Document document = XmlUtil.readXML(inputStream);
     Element root = document.getDocumentElement();
@@ -63,17 +69,18 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
       Class<?> clazz = Class.forName(className);
       // 优先级 id > name
       String beanName = CharSequenceUtil.isNotEmpty(id) ? id : name;
-      if (CharSequenceUtil.isNotEmpty(beanName)) {
+      if (CharSequenceUtil.isEmpty(beanName)) {
         beanName = CharSequenceUtil.lowerFirst(clazz.getSimpleName());
       }
       BeanDefinition beanDefinition = new BeanDefinition(clazz);
 
       populateProperties(beanDefinition, bean.getChildNodes());
 
-      if (getRegistry().containsBeanDefinition(beanName)) {
+      BeanDefinitionRegistry beanDefinitionRegistry = getRegistry();
+      if (beanDefinitionRegistry.containsBeanDefinition(beanName)) {
         throw new BeansException("Duplicate beanName[" + beanName + "] is not allowed");
       }
-      getRegistry().registerBeanDefinition(beanName, beanDefinition);
+      beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);
     }
   }
 

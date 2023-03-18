@@ -1,88 +1,48 @@
 package com.smw.spring.test;
 
 
-import cn.hutool.core.io.IoUtil;
-import com.smw.spring.beans.PropertyValue;
-import com.smw.spring.beans.PropertyValues;
-import com.smw.spring.beans.factory.config.BeanDefinition;
-import com.smw.spring.beans.factory.config.BeanReference;
 import com.smw.spring.beans.factory.support.DefaultListableBeanFactory;
 import com.smw.spring.beans.factory.support.XmlBeanDefinitionReader;
-import com.smw.spring.core.io.DefaultResourceLoader;
-import com.smw.spring.core.io.Resource;
-import com.smw.spring.test.bean.UserDao;
+import com.smw.spring.context.support.ClassPathXmlApplicationContext;
 import com.smw.spring.test.bean.UserService;
-import java.io.IOException;
-import java.io.InputStream;
-import org.junit.jupiter.api.BeforeEach;
+import com.smw.spring.test.common.MyBeanFactoryPostProcessor;
+import com.smw.spring.test.common.MyBeanPostProcessor;
 import org.junit.jupiter.api.Test;
 
 class ApiTest {
 
-  private DefaultResourceLoader resourceLoader;
-
-  @BeforeEach
-  public void init() {
-    resourceLoader = new DefaultResourceLoader();
-  }
-
   @Test
-  void test_classpath() throws IOException {
-    Resource resource = resourceLoader.getResource("classpath:important.properties");
-    InputStream inputStream = resource.getInputStream();
-    String content = IoUtil.readUtf8(inputStream);
-    System.out.println(content);
-  }
-
-  @Test
-  void test_file() throws IOException {
-    Resource resource = resourceLoader.getResource("src/test/resources/important.properties");
-    InputStream inputStream = resource.getInputStream();
-    String content = IoUtil.readUtf8(inputStream);
-    System.out.println(content);
-  }
-
-  @Test
-  void test_url() throws IOException {
-    Resource resource = resourceLoader.getResource(
-        "https://www.google.com/");
-    InputStream inputStream = resource.getInputStream();
-    String content = IoUtil.readUtf8(inputStream);
-    System.out.println(content);
-  }
-
-  @Test
-  void test_BeanFactory() {
+  void test_BeanFactoryPostProcessorAndBeanPostProcessor() {
+    // 1. 初始化 BeanFactory
     DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-    BeanDefinition beanDefinition = new BeanDefinition(UserService.class);
-    beanFactory.registerBeanDefinition("userService", beanDefinition);
-    UserService userService = (UserService) beanFactory.getBean("userService", "smw", 26);
-    userService.queryUserInfo();
-    UserService userService2 = (UserService) beanFactory.getBean("userService");
-    userService2.queryUserInfo(); // 第二次从内存中获取
-  }
 
-  @Test
-  void test_property() {
-    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-    beanFactory.registerBeanDefinition("userDao", new BeanDefinition(UserDao.class));
-    PropertyValues propertyValues = new PropertyValues();
-    propertyValues.addPropertyValue(new PropertyValue("uId", "10002"));
-    propertyValues.addPropertyValue(new PropertyValue("userDao", new BeanReference("userDao")));
-    BeanDefinition beanDefinition = new BeanDefinition(UserService.class, propertyValues);
-    beanFactory.registerBeanDefinition("userService", beanDefinition);
-    UserService userService = (UserService) beanFactory.getBean("userService");
-    userService.queryUserInfo();
+    // 2. 读取配置文件&注册Bean
+    XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
+    reader.loadResourceDefinition("classpath:spring.xml");
+
+    // 3. BeanDefinition 加载完成 & Bean实例化之前，修改 BeanDefinition 的属性值
+    MyBeanFactoryPostProcessor beanFactoryPostProcessor = new MyBeanFactoryPostProcessor();
+    beanFactoryPostProcessor.postProcessBeanFactory(beanFactory);
+
+    // 4. Bean实例化之后，修改 Bean 属性信息
+    MyBeanPostProcessor beanPostProcessor = new MyBeanPostProcessor();
+    beanFactory.addBeanPostProcessor(beanPostProcessor);
+
+    // 5. 获取Bean对象调用方法
+    UserService userService = beanFactory.getBean("userService", UserService.class);
+    String result = userService.queryUserInfo();
+    System.out.println("测试结果：" + result);
   }
 
   @Test
   void test_xml() {
-    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-    XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(beanFactory);
-    xmlBeanDefinitionReader.loadResourceDefinition("classpath:spring.xml");
-    UserService userService = beanFactory.getBean("userService", UserService.class);
-    userService.queryUserInfo();
+    // 1. 初始化 BeanFactory
+    ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext(
+        "classpath:springPostProcessor.xml");
 
-
+    // 2. 获取Bean对象调用方法
+    UserService userService = applicationContext.getBean("userService", UserService.class);
+    String result = userService.queryUserInfo();
+    System.out.println("测试结果：" + result);
   }
 }
