@@ -1,6 +1,9 @@
 package com.smw.spring.test.bean;
 
-public class UserService {
+import com.smw.spring.beans.factory.DisposableBean;
+import com.smw.spring.beans.factory.InitializingBean;
+
+public class UserService implements InitializingBean, DisposableBean {
 
   private String uId;
 
@@ -49,4 +52,13 @@ public class UserService {
     return userDao.queryUserName(uId) + "," + company + "," + location;
   }
 
+  @Override
+  public void destroy() {
+    System.out.println("执行：UserService.destroy()");
+  }
+
+  @Override
+  public void afterPropertiesSet() {
+    System.out.println("执行：UserService.afterPropertiesSet()");
+  }
 }

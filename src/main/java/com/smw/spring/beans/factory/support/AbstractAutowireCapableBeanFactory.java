@@ -1,14 +1,19 @@
 package com.smw.spring.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.util.StrUtil;
 import com.smw.spring.beans.BeansException;
 import com.smw.spring.beans.PropertyValue;
 import com.smw.spring.beans.PropertyValues;
+import com.smw.spring.beans.factory.DisposableBean;
+import com.smw.spring.beans.factory.InitializingBean;
 import com.smw.spring.beans.factory.config.AutowireCapableBeanFactory;
 import com.smw.spring.beans.factory.config.BeanDefinition;
 import com.smw.spring.beans.factory.config.BeanPostProcessor;
 import com.smw.spring.beans.factory.config.BeanReference;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements
     AutowireCapableBeanFactory {
@@ -20,20 +25,41 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     Object bean = createBeanInstance(beanDefinition, beanName, args);
     applyPropertyInstance(beanName, bean, beanDefinition);
     bean = initializeBean(beanName, bean, beanDefinition);
+    registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
     addSingleton(beanName, bean);
     return bean;
   }
 
+  private void registerDisposableBeanIfNecessary(String beanName, Object bean,
+      BeanDefinition beanDefinition) {
+    if (bean instanceof DisposableBean || CharSequenceUtil.isNotEmpty(
+        beanDefinition.getDestroyMethodName())) {
+      registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, beanDefinition));
+    }
+  }
+
   private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
     Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean, beanName);
-    invokeInitMethods(beanName, wrappedBean, beanDefinition);
+    try {
+      invokeInitMethods(beanName, wrappedBean, beanDefinition);
+    } catch (Exception e) {
+      throw new BeansException("Invocation of init method of bean [" + beanName + "] failed", e);
+    }
     wrappedBean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
     return wrappedBean;
   }
 
-  private void invokeInitMethods(String beanName, Object wrappedBean,
-      BeanDefinition beanDefinition) {
+  private void invokeInitMethods(String beanName, Object bean,
+      BeanDefinition beanDefinition) throws Exception {
+    if (bean instanceof InitializingBean) {
+      ((InitializingBean) bean).afterPropertiesSet();
+    }
 
+    String initMethodName = beanDefinition.getInitMethodName();
+    if (CharSequenceUtil.isNotEmpty(initMethodName)) {
+      Method initMethod = beanDefinition.getBeanClass().getMethod(initMethodName);
+      initMethod.invoke(bean);
+    }
   }
 
   private Object createBeanInstance(BeanDefinition beanDefinition, String beanName,
