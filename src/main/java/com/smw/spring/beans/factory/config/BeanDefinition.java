@@ -1,8 +1,12 @@
 package com.smw.spring.beans.factory.config;
 
 import com.smw.spring.beans.PropertyValues;
+import java.util.Objects;
 
 public class BeanDefinition {
+
+  private static final String SCOPE_SINGLETON = ConfigurableBeanFactory.SCOPE_SINGLETON;
+  private static final String SCOPE_PROTOTYPE = ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
   private Class<?> beanClass;
 
@@ -11,6 +15,28 @@ public class BeanDefinition {
   private String initMethodName;
 
   private String destroyMethodName;
+
+  private String scope = SCOPE_SINGLETON;
+
+  private boolean singleton = true;
+
+  private boolean prototype = false;
+
+  public String getScope() {
+    return scope;
+  }
+
+  public boolean isSingleton() {
+    return Objects.equals(scope, SCOPE_SINGLETON);
+  }
+
+  public boolean isPrototype() {
+    return Objects.equals(scope, SCOPE_PROTOTYPE);
+  }
+
+  public void setScope(String scope) {
+    this.scope = scope;
+  }
 
   public String getInitMethodName() {
     return initMethodName;

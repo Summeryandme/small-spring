@@ -5,9 +5,10 @@ import com.smw.spring.beans.factory.DisposableBean;
 import com.smw.spring.beans.factory.config.SingletonBeanRegistry;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
+
+  protected static final Object NULL_OBJECT = new Object();
 
   private final Map<String, Object> singletonObjects = new HashMap<>();
 

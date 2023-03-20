@@ -1,13 +1,14 @@
 package com.smw.spring.beans.factory.support;
 
 import cn.hutool.core.util.ClassUtil;
+import com.smw.spring.beans.factory.FactoryBean;
 import com.smw.spring.beans.factory.config.BeanDefinition;
 import com.smw.spring.beans.factory.config.BeanPostProcessor;
 import com.smw.spring.beans.factory.config.ConfigurableBeanFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements
+public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements
     ConfigurableBeanFactory {
 
   private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
@@ -29,17 +30,31 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
   public <T> T getBean(String name, Class<T> requiredType) {
     return (T) getBean(name);
   }
+
   public ClassLoader getBeanClassLoader() {
     return this.beanClassLoader;
   }
 
-  private Object doGetBean(String beanName, Object... args) {
-    Object bean = getSingleton(beanName);
-    if (bean != null) {
-      return bean;
+  private <T> T doGetBean(String beanName, Object... args) {
+    Object sharedInstance = getSingleton(beanName);
+    if (sharedInstance != null) {
+      return (T) getObjectForBeanInstance(sharedInstance, beanName);
     }
     BeanDefinition beanDefinition = getBeanDefinition(beanName);
-    return createBean(beanName, beanDefinition, args);
+    Object bean = createBean(beanName, beanDefinition, args);
+    return (T) getObjectForBeanInstance(bean, beanName);
+  }
+
+  private Object getObjectForBeanInstance(Object bean, String name) {
+    if (!(bean instanceof FactoryBean)) {
+      return bean;
+    }
+    Object object = getCacheObjectForFactoryBean(name);
+    if (object == null) {
+      FactoryBean<?> factoryBean = (FactoryBean<?>) bean;
+      object = getObjectFromFactoryBean(factoryBean, name);
+    }
+    return object;
   }
 
   protected abstract Object createBean(String beanName, BeanDefinition beanDefinition,
