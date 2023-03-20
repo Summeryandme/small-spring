@@ -1,5 +1,6 @@
 package com.smw.spring.beans.factory.support;
 
+import cn.hutool.core.util.ClassUtil;
 import com.smw.spring.beans.factory.config.BeanDefinition;
 import com.smw.spring.beans.factory.config.BeanPostProcessor;
 import com.smw.spring.beans.factory.config.ConfigurableBeanFactory;
@@ -10,6 +11,9 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     ConfigurableBeanFactory {
 
   private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
+
+  private final ClassLoader beanClassLoader = ClassUtil.getClassLoader();
+
 
   @Override
   public Object getBean(String beanName) {
@@ -24,6 +28,9 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
   @Override
   public <T> T getBean(String name, Class<T> requiredType) {
     return (T) getBean(name);
+  }
+  public ClassLoader getBeanClassLoader() {
+    return this.beanClassLoader;
   }
 
   private Object doGetBean(String beanName, Object... args) {

@@ -1,9 +1,14 @@
 package com.smw.spring.test.bean;
 
-import com.smw.spring.beans.factory.DisposableBean;
-import com.smw.spring.beans.factory.InitializingBean;
+import com.smw.spring.beans.factory.BeanClassLoaderAware;
+import com.smw.spring.beans.factory.BeanFactory;
+import com.smw.spring.beans.factory.BeanFactoryAware;
+import com.smw.spring.beans.factory.BeanNameAware;
+import com.smw.spring.context.ApplicationContext;
+import com.smw.spring.context.ApplicationContextAware;
 
-public class UserService implements InitializingBean, DisposableBean {
+public class UserService implements BeanNameAware,
+    BeanClassLoaderAware, ApplicationContextAware, BeanFactoryAware {
 
   private String uId;
 
@@ -12,6 +17,10 @@ public class UserService implements InitializingBean, DisposableBean {
   private String location;
 
   private UserDao userDao;
+
+  private ApplicationContext applicationContext;
+
+  private BeanFactory beanFactory;
 
   public UserService() {
   }
@@ -53,12 +62,30 @@ public class UserService implements InitializingBean, DisposableBean {
   }
 
   @Override
-  public void destroy() {
-    System.out.println("执行：UserService.destroy()");
+  public void setBeanClassLoader(ClassLoader classLoader) {
+    System.out.println("classLoader: " + classLoader);
   }
 
   @Override
-  public void afterPropertiesSet() {
-    System.out.println("执行：UserService.afterPropertiesSet()");
+  public void setBeanFactory(BeanFactory beanFactory) {
+    this.beanFactory = beanFactory;
+  }
+
+  @Override
+  public void setBeanName(String name) {
+    System.out.println("bean name: " + name);
+  }
+
+  @Override
+  public void setApplicationContext(ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
+  }
+
+  public ApplicationContext getApplicationContext() {
+    return applicationContext;
+  }
+
+  public BeanFactory getBeanFactory() {
+    return beanFactory;
   }
 }
