@@ -2,7 +2,7 @@ package com.smw.spring.aop.aspectj;
 
 import com.smw.spring.aop.ClassFilter;
 import com.smw.spring.aop.MethodMatcher;
-import com.smw.spring.aop.PointCut;
+import com.smw.spring.aop.Pointcut;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,7 +10,7 @@ import org.aspectj.weaver.tools.PointcutExpression;
 import org.aspectj.weaver.tools.PointcutParser;
 import org.aspectj.weaver.tools.PointcutPrimitive;
 
-public class AspectJExpressionPointcut implements PointCut, ClassFilter, MethodMatcher {
+public class AspectJExpressionPointcut implements Pointcut, ClassFilter, MethodMatcher {
 
   private static final Set<PointcutPrimitive> SUPPORTED_PRIMITIVES = new HashSet<>();
 

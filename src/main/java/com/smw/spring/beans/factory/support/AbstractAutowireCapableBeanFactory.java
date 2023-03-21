@@ -1,6 +1,8 @@
 package com.smw.spring.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.smw.spring.beans.BeansException;
 import com.smw.spring.beans.PropertyValue;
@@ -17,6 +19,8 @@ import com.smw.spring.beans.factory.config.BeanPostProcessor;
 import com.smw.spring.beans.factory.config.BeanReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
 
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements
     AutowireCapableBeanFactory {
@@ -88,7 +92,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     Class<?> beanClass = beanDefinition.getBeanClass();
     Constructor<?>[] declaredConstructors = beanClass.getDeclaredConstructors();
     for (Constructor<?> declaredConstructor : declaredConstructors) {
-      if (args != null && checkParameterType(declaredConstructor.getParameterTypes(), args)) {
+      if (CollUtil.isNotEmpty(Arrays.asList(args)) && checkParameterType(
+          declaredConstructor.getParameterTypes(), args)) {
         constructor = declaredConstructor;
         break;
       }
@@ -109,7 +114,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         BeanUtil.setFieldValue(bean, name, value);
       }
     } catch (Exception e) {
-      throw new BeansException("Error setting property value: " + beanName, e);
+      throw new BeansException("Error setting property value: " + beanName, e.getCause());
     }
 
   }

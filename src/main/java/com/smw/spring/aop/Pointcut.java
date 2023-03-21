@@ -1,6 +1,6 @@
 package com.smw.spring.aop;
 
-public interface PointCut {
+public interface Pointcut {
 
   ClassFilter getClassFilter();
 
